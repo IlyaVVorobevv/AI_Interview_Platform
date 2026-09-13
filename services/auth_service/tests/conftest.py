@@ -31,7 +31,7 @@ async def override_get_db():
 
 app.dependency_overrides[get_db] = override_get_db
 
-@pytest_asyncio.fixture(scope="function")
+@pytest_asyncio.fixture()
 async def setup_db():
     async with test_engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
@@ -53,10 +53,15 @@ async def db_session(setup_db):
 
 @pytest_asyncio.fixture()
 async def create_user_helper(setup_db, client):
-    async def _create_user(email, username, password):
-        build_json = {"email": email, "username": username, "password": password}
-        response = await client.post("/auth/register", json=build_json)
-        return response
+    async def _create_user(email, username, password, auth_role):
+        if auth_role == "register":
+            build_json = {"email": email, "username": username, "password": password}
+            response = await client.post(f"/auth/{auth_role}", json=build_json)
+            return response
+        elif auth_role == "login":
+            build_json = {"email": email, "password": password}
+            response = await client.post(f"/auth/{auth_role}", json=build_json)
+            return response
     return _create_user
 
 @pytest_asyncio.fixture()
