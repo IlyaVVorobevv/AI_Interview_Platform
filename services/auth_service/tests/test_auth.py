@@ -63,5 +63,3 @@ async def test_duplicate_username(create_user_helper, get_user_helper):
     db_first_user = await get_user_helper("test1@example.com")
     assert db_first_user is not None
 
-
-
