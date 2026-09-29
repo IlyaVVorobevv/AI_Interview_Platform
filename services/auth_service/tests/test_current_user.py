@@ -9,9 +9,9 @@ async def test_get_current_user(create_user_helper, client):
                              auth_role="register")
 
     response_login = await create_user_helper(email="user67@example.com",
-                                              username="string67",
-                                              password="12345678",
-                                              auth_role="login")
+                             username="string67",
+                             password="12345678",
+                             auth_role="login")
     data = response_login.json()
     access_token = data["access_token"]
     headers = {
@@ -37,9 +37,9 @@ async def test_get_current_user_without_token(create_user_helper, client):
                              auth_role="register")
 
     await create_user_helper(email="user67@example.com",
-                                              username="string67",
-                                              password="12345678",
-                                              auth_role="login")
+                             username="string67",
+                             password="12345678",
+                             auth_role="login")
 
     response_user = await client.get("/users/me")
 
@@ -163,3 +163,32 @@ async def test_get_users_empty(create_user_helper, client):
     assert response_users.status_code == 200
     data = response_users.json()
     assert data == []
+
+@pytest.mark.asyncio
+async def test_success_get_user_by_id(create_user_helper, client):
+    await create_user_helper(
+        email="user1@example.com",
+        username="user1",
+        password="12345678",
+        auth_role="register"
+    )
+    response_user = await client.get("/users/1")
+    assert response_user.status_code == 200
+    data = response_user.json()
+    required_fields = {"id", "username", "email", "is_active", "created_at"}
+    assert required_fields.issubset(data.keys())
+    assert "password" not in data
+    assert "hashed_password" not in data
+
+@pytest.mark.asyncio
+async def test_get_not_found_user_by_id(create_user_helper, client):
+    await create_user_helper(
+        email="user1@example.com",
+        username="user1",
+        password="12345678",
+        auth_role="register"
+    )
+    response_user = await client.get("/users/999")
+    assert response_user.status_code == 404
+    data = response_user.json()
+    assert data["detail"] == "User not found"

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Path
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.session import get_db
@@ -31,3 +31,8 @@ async def get_user(current_user: User = Depends(get_current_active_user)):
 @router_user.get("/admin")
 async def admin_only(current_user: User = Depends(get_current_superuser)):
     return {"message": "Welcome, admin"}
+
+@router_user.get("/{user_id}", response_model=UserResponse)
+async def get_user_by_id(user_service: UserService = Depends(get_user_service), user_id: int = Path(gt=0)):
+    user = await user_service.get_user_by_id(user_id)
+    return user
