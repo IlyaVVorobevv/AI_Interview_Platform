@@ -28,7 +28,8 @@ class UserRepository:
 
     async def get_all(self, limit: int, offset: int) -> List[User]:
         query = select(User).order_by(User.id).offset(offset).limit(limit)
-        users = await self.db.scalars(query).all()
+        result = await self.db.scalars(query)
+        users = result.all()
         return users
 
     async def create(self, user: User) -> User:
