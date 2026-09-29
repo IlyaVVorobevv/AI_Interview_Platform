@@ -1,3 +1,5 @@
+from typing import List
+
 from pydantic import EmailStr
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -18,6 +20,16 @@ class UserRepository:
         query = select(User).where(User.username == user_username)
         result = await self.db.execute(query)
         return result.scalar_one_or_none()
+
+    async def get_by_id(self, user_id: int) -> User | None:
+        query = select(User).where(User.id == user_id)
+        result = await self.db.execute(query)
+        return result.scalar_one_or_none()
+
+    async def get_all(self, limit: int, offset: int) -> List[User]:
+        query = select(User).order_by(User.id).offset(offset).limit(limit)
+        users = await self.db.scalars(query).all()
+        return users
 
     async def create(self, user: User) -> User:
         self.db.add(user)

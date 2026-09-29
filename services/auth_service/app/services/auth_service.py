@@ -49,6 +49,10 @@ class AuthService:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
                                 detail="Invalid email or password")
 
+        if not user.is_active:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+                                detail="Invalid roots")
+
         return user
 
     def generate_access_token(self, user: User) -> str:
