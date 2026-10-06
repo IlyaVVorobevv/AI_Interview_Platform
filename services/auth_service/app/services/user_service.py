@@ -4,6 +4,8 @@ from fastapi import HTTPException, status
 
 from app.repositories.user_repository import UserRepository
 from app.models.user import User
+from app.schemas.user import UserUpdate
+
 
 class UserService:
     def __init__(self, user_repository: UserRepository):
@@ -19,3 +21,16 @@ class UserService:
     async def get_users(self, limit: int, offset: int) -> List[User]:
         users = await self.user_repository.get_all(limit, offset)
         return users
+
+    async def update_user(self, user_id, data_for_update: UserUpdate) -> User:
+        user = await self.user_repository.get_by_id(user_id)
+        if user is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                detail="User not found")
+        data_dict = data_for_update.model_dump(exclude_unset=True)
+        for field, value in data_dict.items():
+            setattr(user, field, value)
+        user = await self.user_repository.update(user)
+        return user
+
+

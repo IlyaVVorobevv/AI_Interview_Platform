@@ -192,3 +192,49 @@ async def test_get_not_found_user_by_id(create_user_helper, client):
     assert response_user.status_code == 404
     data = response_user.json()
     assert data["detail"] == "User not found"
+
+@pytest.mark.asyncio
+async def test_update_user_without_token(client):
+    response = await client.patch("/users/me",
+                                  json={"username": "user100"}
+                                  )
+    assert response.status_code == 401
+
+@pytest.mark.asyncio
+async def test_update_user_with_wrong_token(client):
+    response = await client.patch("/users/me",
+                                  json={"username": "user100"},
+                                  headers={"Authorization": "Bearer Invalid"}
+                                  )
+    assert response.status_code == 401
+
+@pytest.mark.asyncio
+async def test_update_user_with_valid_token(create_user_helper, client):
+    await create_user_helper(
+        email="user1@example.com",
+        username="user1",
+        password="12345678",
+        auth_role="register"
+    )
+    login_response = await create_user_helper(
+        email="user1@example.com",
+        username="user1",
+        password="12345678",
+        auth_role="login"
+    )
+    assert login_response.status_code == 200
+
+    data = login_response.json()
+    access_token = data["access_token"]
+
+    response = await client.patch(
+        "/users/me",
+        json={"username": "new_username"},
+        headers={"Authorization": f"Bearer {access_token}"}
+    )
+
+    assert response.status_code == 200
+
+    data = response.json()
+    assert data["username"] == "new_username"
+    assert data["email"] == "user1@example.com"

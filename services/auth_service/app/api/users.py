@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.database.session import get_db
 from app.repositories.user_repository import UserRepository
 from app.services.user_service import UserService
-from app.schemas.user import UserResponse
+from app.schemas.user import UserResponse, UserUpdate
 from app.models.user import User
 from app.security.jwt import get_current_active_user, get_current_superuser
 
@@ -33,6 +33,14 @@ async def admin_only(current_user: User = Depends(get_current_superuser)):
     return {"message": "Welcome, admin"}
 
 @router_user.get("/{user_id}", response_model=UserResponse)
-async def get_user_by_id(user_service: UserService = Depends(get_user_service), user_id: int = Path(gt=0)):
+async def get_user_by_id(user_service: UserService = Depends(get_user_service),
+                         user_id: int = Path(gt=0)):
     user = await user_service.get_user_by_id(user_id)
     return user
+
+@router_user.patch("/me", response_model=UserResponse)
+async def update_current_user(data_for_update: UserUpdate,
+                              current_user: User = Depends(get_current_active_user),
+                              user_service: UserService = Depends(get_user_service)):
+    update_user = await user_service.update_user(current_user.id, data_for_update)
+    return update_user
