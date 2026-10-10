@@ -238,3 +238,67 @@ async def test_update_user_with_valid_token(create_user_helper, client):
     data = response.json()
     assert data["username"] == "new_username"
     assert data["email"] == "user1@example.com"
+
+@pytest.mark.asyncio
+async def test_update_username_success(authenticated_token, client):
+    response = await client.patch(
+        "/users/me",
+        json={"username": "new_username"},
+        headers={"Authorization": f"Bearer {authenticated_token}"}
+    )
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert data["username"] == "new_username"
+    assert data["email"] == "user1@example.com"
+
+@pytest.mark.asyncio
+async def test_update_email_success(authenticated_token, client):
+    response = await client.patch(
+        "/users/me",
+        json={"email": "new@example.com"},
+        headers={"Authorization": f"Bearer {authenticated_token}"}
+    )
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert data["email"] == "new@example.com"
+    assert data["username"] == "user1"
+
+@pytest.mark.asyncio
+async def test_update_duplicate_email(create_user_helper, authenticated_token, client):
+    await create_user_helper(
+        email="user2@example.com",
+        username="user2",
+        password="12345678",
+        auth_role="register"
+    )
+
+    response = await client.patch(
+        "/users/me",
+        json={"email": "user2@example.com"},
+        headers={"Authorization": f"Bearer {authenticated_token}"}
+    )
+
+    assert response.status_code == 400
+
+@pytest.mark.asyncio
+async def test_update_duplicate_username(create_user_helper, authenticated_token, client):
+    await create_user_helper(
+        email="user2@example.com",
+        username="user2",
+        password="12345678",
+        auth_role="register"
+    )
+
+    response = await client.patch(
+        "/users/me",
+        json={"username": "user2"},
+        headers={"Authorization": f"Bearer {authenticated_token}"}
+    )
+
+    assert response.status_code == 400

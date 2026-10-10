@@ -65,6 +65,22 @@ async def create_user_helper(setup_db, client):
     return _create_user
 
 @pytest_asyncio.fixture()
+async def authenticated_token(create_user_helper):
+    await create_user_helper(
+        email="user1@example.com",
+        username="user1",
+        password="12345678",
+        auth_role="register"
+    )
+    login_response = await create_user_helper(
+        email="user1@example.com",
+        username="user1",
+        password="12345678",
+        auth_role="login"
+    )
+    return login_response.json()["access_token"]
+
+@pytest_asyncio.fixture()
 async def get_user_helper(setup_db, db_session):
     async def _get_user(email):
         query = select(User).where(User.email == email)
