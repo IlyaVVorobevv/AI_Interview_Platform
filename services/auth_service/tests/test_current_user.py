@@ -1,5 +1,8 @@
 import pytest
 
+from app.repositories.user_repository import UserRepository
+from tests.conftest import db_session
+
 
 @pytest.mark.asyncio
 async def test_get_current_user(create_user_helper, client):
@@ -302,3 +305,18 @@ async def test_update_duplicate_username(create_user_helper, authenticated_token
     )
 
     assert response.status_code == 400
+
+@pytest.mark.asyncio
+async def test_delete_user(client, authenticated_token, db_session):
+    response = await client.delete("/users/me",
+                                   headers={"Authorization": f"Bearer {authenticated_token}"})
+    assert response.status_code == 204
+
+    repository = UserRepository(db_session)
+
+    user = await repository.get_by_email("user1@example.com")
+    assert user is None
+
+    response_for_error = await client.get("/users/me",
+                                          headers={"Authorization": f"Bearer {authenticated_token}"})
+    assert response_for_error.status_code == 401
