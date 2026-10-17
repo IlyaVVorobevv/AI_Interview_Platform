@@ -341,3 +341,48 @@ async def test_get_users_for_admin(client, admin_token):
                                 headers={"Authorization": f"Bearer {admin_token}"})
 
     assert response.status_code == 200
+
+import pytest
+
+
+@pytest.mark.asyncio
+async def test_get_users_without_token(client):
+    response = await client.get("/users")
+
+    assert response.status_code == 401
+
+
+@pytest.mark.asyncio
+async def test_get_users_for_regular_user(client, authenticated_token):
+    response = await client.get("/users",
+                                headers={"Authorization": f"Bearer {authenticated_token}"})
+
+    assert response.status_code == 403
+
+
+@pytest.mark.asyncio
+async def test_get_users_for_admin(client, admin_token):
+    response = await client.get("/users",
+                                headers={"Authorization": f"Bearer {admin_token}"})
+
+    assert response.status_code == 200
+    assert isinstance(response.json(), list)
+
+
+@pytest.mark.asyncio
+async def test_get_users_pagination(client, admin_token):
+    headers = {"Authorization": f"Bearer {admin_token}"}
+
+    response_first = await client.get("/users?limit=2&offset=0",
+                                      headers=headers)
+    response_second = await client.get("/users?limit=2&offset=2",
+                                       headers=headers)
+
+    assert response_first.status_code == 200
+    assert response_second.status_code == 200
+    assert len(response_first.json()) <= 2
+    assert len(response_second.json()) <= 2
+
+    for user in response_first.json() + response_second.json():
+        assert "password" not in user
+        assert "hashed_password" not in user

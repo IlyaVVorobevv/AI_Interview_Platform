@@ -18,7 +18,8 @@ router_user = APIRouter(
 )
 
 @router_user.get("", response_model=list[UserResponse])
-async def get_users(user_service: UserService = Depends(get_user_service),
+async def get_users(current_user: User = Depends(get_current_superuser),
+                    user_service: UserService = Depends(get_user_service),
                     limit: int = Query(default=10, ge=0, le=100),
                     offset: int = Query(default=0, ge=0)):
     users = await user_service.get_users(limit, offset)
