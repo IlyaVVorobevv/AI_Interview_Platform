@@ -1,6 +1,7 @@
 import pytest
 
 from app.repositories.user_repository import UserRepository
+from app.security.jwt import get_current_active_user, get_current_superuser
 from tests.conftest import db_session
 
 
@@ -320,3 +321,23 @@ async def test_delete_user(client, authenticated_token, db_session):
     response_for_error = await client.get("/users/me",
                                           headers={"Authorization": f"Bearer {authenticated_token}"})
     assert response_for_error.status_code == 401
+
+@pytest.mark.asyncio
+async def test_get_users_for_regular_user(client, authenticated_token):
+    response = await client.get("/users",
+                                headers={"Authorization": f"Bearer {authenticated_token}"})
+
+    assert response.status_code == 403
+
+@pytest.mark.asyncio
+async def test_get_users_without_token(client):
+    response = await client.get("/users")
+
+    assert response.status_code == 401
+
+@pytest.mark.asyncio
+async def test_get_users_for_admin(client, admin_token):
+    response = await client.get("/users",
+                                headers={"Authorization": f"Bearer {admin_token}"})
+
+    assert response.status_code == 200

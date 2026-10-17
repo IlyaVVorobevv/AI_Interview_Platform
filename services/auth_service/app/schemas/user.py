@@ -1,5 +1,8 @@
 import datetime
-from pydantic import BaseModel, EmailStr, Field, ConfigDict
+from typing import Any
+
+from pydantic import BaseModel, EmailStr, Field, ConfigDict, field_validator
+from fastapi import HTTPException, status
 
 
 class UserCreate(BaseModel):
@@ -24,3 +27,19 @@ class UserResponse(BaseModel):
 class UserUpdate(BaseModel):
     username: str | None = None
     email: EmailStr | None = None
+
+    @field_validator("email", mode="before")
+    @classmethod
+    def check_email(cls, email: Any) -> EmailStr | None:
+        if email is None:
+            raise ValueError()
+        return email
+
+    @field_validator("username", mode="before")
+    @classmethod
+    def check_username(cls, username: Any) -> str | None:
+        if username is None:
+            raise ValueError()
+        return username
+
+    model_config = ConfigDict(extra="forbid")

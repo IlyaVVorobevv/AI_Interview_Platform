@@ -10,6 +10,7 @@ from app.models.user import User
 from app.database.session import get_db
 from app.database.base import Base
 from app.database.config import settings
+from app.repositories.user_repository import UserRepository
 
 
 TEST_DATABASE_URL = settings.test_database_url
@@ -78,6 +79,28 @@ async def authenticated_token(create_user_helper):
         password="12345678",
         auth_role="login"
     )
+    return login_response.json()["access_token"]
+
+@pytest_asyncio.fixture()
+async def admin_token(db_session, create_user_helper):
+    await create_user_helper(
+        email="admin@example.com",
+        username="admin",
+        password="12345678",
+        auth_role="register"
+    )
+
+    user = await UserRepository(db_session).get_by_email("admin@example.com")
+    user.is_superuser = True
+    await db_session.commit()
+
+    login_response = await create_user_helper(
+        email="admin@example.com",
+        username="admin",
+        password="12345678",
+        auth_role="login"
+    )
+
     return login_response.json()["access_token"]
 
 @pytest_asyncio.fixture()
