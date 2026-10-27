@@ -2,7 +2,6 @@ import datetime
 from typing import Any
 
 from pydantic import BaseModel, EmailStr, Field, ConfigDict, field_validator
-from fastapi import HTTPException, status
 
 
 class UserCreate(BaseModel):
