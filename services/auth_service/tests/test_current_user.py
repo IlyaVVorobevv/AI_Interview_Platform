@@ -70,7 +70,7 @@ async def test_get_current_user_with_invalid_token(create_user_helper, client):
     assert response_user.status_code == 401
 
 @pytest.mark.asyncio
-async def test_get_users(create_user_helper, client):
+async def test_get_users(create_user_helper, client, admin_token):
     await create_user_helper(
         email="user1@example.com",
         username="user1",
@@ -102,16 +102,20 @@ async def test_get_users(create_user_helper, client):
         auth_role="register"
     )
 
-    response_users = await client.get("/users")
+    response_users = await client.get("/users",
+                                      headers={"Authorization": f"Bearer {admin_token}"})
 
     assert response_users.status_code == 200
     data = response_users.json()
     assert isinstance(data, list)
-    assert len(data) == 5
-    assert data[0]["email"] == "user1@example.com"
-    assert data[4]["username"] == "user5"
-    assert "password" not in data[4]
-    assert "hashed_password" not in data[4]
+
+    emails = {user["email"] for user in data}
+    for i in range(1, 6):
+        assert f"user{i}@example.com" in emails
+
+    for user in data:
+        assert "password" not in user
+        assert "hashed_password" not in user
 
 @pytest.mark.asyncio
 async def test_get_users_pagination(create_user_helper, client):
@@ -160,13 +164,6 @@ async def test_get_users_pagination(create_user_helper, client):
     assert data_with_offset[0]["email"] == "user3@example.com"
     assert data_with_offset[1]["email"] == "user4@example.com"
     assert len(data_with_offset) == 2
-
-@pytest.mark.asyncio
-async def test_get_users_empty(create_user_helper, client):
-    response_users = await client.get("/users")
-    assert response_users.status_code == 200
-    data = response_users.json()
-    assert data == []
 
 @pytest.mark.asyncio
 async def test_success_get_user_by_id(create_user_helper, client):
@@ -321,29 +318,6 @@ async def test_delete_user(client, authenticated_token, db_session):
     response_for_error = await client.get("/users/me",
                                           headers={"Authorization": f"Bearer {authenticated_token}"})
     assert response_for_error.status_code == 401
-
-@pytest.mark.asyncio
-async def test_get_users_for_regular_user(client, authenticated_token):
-    response = await client.get("/users",
-                                headers={"Authorization": f"Bearer {authenticated_token}"})
-
-    assert response.status_code == 403
-
-@pytest.mark.asyncio
-async def test_get_users_without_token(client):
-    response = await client.get("/users")
-
-    assert response.status_code == 401
-
-@pytest.mark.asyncio
-async def test_get_users_for_admin(client, admin_token):
-    response = await client.get("/users",
-                                headers={"Authorization": f"Bearer {admin_token}"})
-
-    assert response.status_code == 200
-
-import pytest
-
 
 @pytest.mark.asyncio
 async def test_get_users_without_token(client):
