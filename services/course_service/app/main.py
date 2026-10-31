@@ -1,6 +1,9 @@
-from fastapi import FastAPI
-from app.api.routes import router
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 
+
+from app.api.routes import router
+from app.core.exceptions import CourseNotFoundError
 
 app = FastAPI(
     title="Course Service",
@@ -8,3 +11,9 @@ app = FastAPI(
 )
 
 app.include_router(router)
+
+
+@app.exception_handler(CourseNotFoundError)
+async def check_exception(request: Request, error: CourseNotFoundError) -> JSONResponse:
+    return JSONResponse(status_code=404,
+                        content={"detail": "Course not found"})

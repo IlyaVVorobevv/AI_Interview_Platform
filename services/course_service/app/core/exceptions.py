@@ -1,0 +1,2 @@
+class CourseNotFoundError(Exception):
+    pass
