@@ -1,3 +1,5 @@
+from typing import List
+
 from app.models.course import Course
 from app.schemas.course import CourseCreate
 from app.repositories.course import CourseRepository
@@ -18,8 +20,12 @@ class CourseService:
 
         return await self.course_repository.create(new_course)
 
-    async def get_course(self, course_id: int) -> Course:
+    async def get_course_by_id(self, course_id: int) -> Course:
         course = await self.course_repository.get_by_id(course_id)
         if course is None:
             raise CourseNotFoundError()
         return course
+
+    async def get_courses(self, limit: int, offset: int) -> List[Course]:
+        courses = await self.course_repository.get_all(limit, offset)
+        return courses
