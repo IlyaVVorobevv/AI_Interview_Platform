@@ -1,15 +1,14 @@
-from typing import List
-
 from pydantic import EmailStr
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 
 from app.models.user import User
+from shared.repositories.base import BaseRepository
 
 
-class UserRepository:
+class UserRepository(BaseRepository[User]):
     def __init__(self, db: AsyncSession) -> None:
-        self.db = db
+        super().__init__(User, db)
 
     async def get_by_email(self, user_email: EmailStr) -> User | None:
         query = select(User).where(User.email == user_email)
@@ -20,17 +19,6 @@ class UserRepository:
         query = select(User).where(User.username == user_username)
         result = await self.db.execute(query)
         return result.scalar_one_or_none()
-
-    async def get_by_id(self, user_id: int) -> User | None:
-        query = select(User).where(User.id == user_id)
-        result = await self.db.execute(query)
-        return result.scalar_one_or_none()
-
-    async def get_all(self, limit: int, offset: int) -> List[User]:
-        query = select(User).order_by(User.id).offset(offset).limit(limit)
-        result = await self.db.scalars(query)
-        users = result.all()
-        return users
 
     async def create(self, user: User) -> User:
         self.db.add(user)
