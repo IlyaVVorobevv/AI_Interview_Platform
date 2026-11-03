@@ -3,6 +3,7 @@ from fastapi.responses import JSONResponse
 
 
 from app.api.routes import router
+from app.api.courses import courses_router
 from app.core.exceptions import CourseNotFoundError
 
 app = FastAPI(
@@ -11,6 +12,7 @@ app = FastAPI(
 )
 
 app.include_router(router)
+app.include_router(courses_router)
 
 
 @app.exception_handler(CourseNotFoundError)
