@@ -21,9 +21,9 @@ class CourseCreate(BaseModel):
 
 
 class CourseUpdate(BaseModel):
-    title: str | None = Field(min_length=3, default=None)
+    title: str = Field(min_length=3, default=None)
     description: str | None = None
-    subject: str | None = Field(min_length=3, default=None)
+    subject: str = Field(min_length=3, default=None)
     exam_type: valid_exam_type | None = None
     is_published: bool | None = None
 
