@@ -1,12 +1,12 @@
 from typing import List
-from fastapi import APIRouter, Depends, Path
+from fastapi import APIRouter, Depends, Path, status
 from fastapi.params import Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database.session import get_db
 from app.repositories.course import CourseRepository
 from app.services.course import CourseService
-from app.schemas.course import CourseRead, CourseCreate
+from app.schemas.course import CourseRead, CourseCreate, CourseUpdate
 
 
 async def get_course_service(db: AsyncSession = Depends(get_db)):
@@ -36,3 +36,15 @@ async def get_courses(service: CourseService = Depends(get_course_service),
                       offset: int = Query(default=0, ge=0)):
     courses = await service.get_courses(limit, offset)
     return courses
+
+@courses_router.patch("/{course_id}", response_model=CourseRead)
+async def update_course(service: CourseService = Depends(get_course_service),
+                        course_id: int = Path(gt=0),
+                        course_data: CourseUpdate = ...):
+    course = await service.update_course(course_id, course_data)
+    return course
+
+@courses_router.delete("/{course_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_course(service: CourseService = Depends(get_course_service),
+                        course_id: int = Path(gt=0)):
+    await service.delete_course(course_id)
