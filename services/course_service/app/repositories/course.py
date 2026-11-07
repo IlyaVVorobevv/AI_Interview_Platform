@@ -8,11 +8,3 @@ class CourseRepository(BaseRepository[Course]):
     def __init__(self, db: AsyncSession) -> None:
         super().__init__(Course, db)
 
-    async def create(self, course: Course) -> Course:
-        self.db.add(course)
-        await self.db.commit()
-        await self.db.refresh(course)
-        return course
-
-
-

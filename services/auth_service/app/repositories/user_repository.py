@@ -19,19 +19,3 @@ class UserRepository(BaseRepository[User]):
         query = select(User).where(User.username == user_username)
         result = await self.db.execute(query)
         return result.scalar_one_or_none()
-
-    async def create(self, user: User) -> User:
-        self.db.add(user)
-        await self.db.commit()
-        await self.db.refresh(user)
-        return user
-
-    async def update(self, user: User) -> User:
-        await self.db.commit()
-        await self.db.refresh(user)
-        return user
-
-    async def delete(self, user: User) -> None:
-        await self.db.delete(user)
-        await self.db.commit()
-        return None
