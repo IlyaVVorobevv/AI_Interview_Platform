@@ -2,6 +2,8 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from pathlib import Path
 
 
+ENV_PATH = Path(__file__).resolve().parents[2] / ".env"
+
 class Settings(BaseSettings):
     DB_USER: str
     DB_PASSWORD: str
@@ -22,8 +24,6 @@ class Settings(BaseSettings):
     def test_database_url(self) -> str:
         return (f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASSWORD}@"
                 f"{self.DB_HOST}:{self.DB_PORT}/test_{self.DB_NAME}")
-
-    ENV_PATH = Path(__file__).resolve().parents[3] / ".env"
 
     model_config = SettingsConfigDict(
         env_file=ENV_PATH,
