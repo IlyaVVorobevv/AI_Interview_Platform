@@ -21,23 +21,29 @@ class AuthService:
         return user is not None
 
     async def register_user(self, user_register: UserCreate) -> User:
-        if await self.email_exists(user_register.email):
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                                detail="Email already registered")
+        try:
+            if await self.email_exists(user_register.email):
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                                    detail="Email already registered")
 
-        if await self.username_exists(user_register.username):
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
-                                detail="Username already registered")
+            if await self.username_exists(user_register.username):
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                                    detail="Username already registered")
 
-        hashed_password = hash_password(user_register.password)
+            hashed_password = hash_password(user_register.password)
 
-        new_user = User(
-            email=user_register.email,
-            username=user_register.username,
-            hashed_password=hashed_password
-        )
-
-        return await self.user_repository.create(new_user)
+            new_user = User(
+                email=user_register.email,
+                username=user_register.username,
+                hashed_password=hashed_password
+            )
+            create_user = await self.user_repository.create(new_user)
+            await self.user_repository.db.commit()
+            await self.user_repository.db.refresh(create_user)
+            return create_user
+        except Exception:
+            await self.user_repository.db.rollback()
+            raise
 
     async def authenticate_user(self, user_login: UserLogin) -> User:
         user = await self.user_repository.get_by_email(user_login.email)

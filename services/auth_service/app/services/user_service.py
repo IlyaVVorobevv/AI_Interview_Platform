@@ -52,9 +52,13 @@ class UserService:
         return user
 
     async def delete_user(self, user_id: int) -> None:
-        user = await self.user_repository.get_by_id(user_id)
-        if user is None:
-            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
-                                detail="User not found")
-        await self.user_repository.delete(user)
-
+        try:
+            user = await self.user_repository.get_by_id(user_id)
+            if user is None:
+                raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                                    detail="User not found")
+            await self.user_repository.delete(user)
+            await self.user_repository.db.commit()
+        except Exception:
+            await self.user_repository.rollback()
+            raise
