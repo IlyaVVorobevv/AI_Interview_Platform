@@ -255,6 +255,15 @@ async def test_update_username_success(authenticated_token, client):
     assert data["username"] == "new_username"
     assert data["email"] == "user1@example.com"
 
+    user_id = data["id"]
+
+    response_for_check = await client.get(f"/users/{user_id}")
+    assert response_for_check.status_code == 200
+
+    data = response_for_check.json()
+    assert data["username"] == "new_username"
+
+
 @pytest.mark.asyncio
 async def test_update_email_success(authenticated_token, client):
     response = await client.patch(
@@ -269,6 +278,14 @@ async def test_update_email_success(authenticated_token, client):
 
     assert data["email"] == "new@example.com"
     assert data["username"] == "user1"
+
+    user_id = data["id"]
+
+    response_for_check = await client.get(f"/users/{user_id}")
+    assert response_for_check.status_code == 200
+
+    data = response_for_check.json()
+    assert data["email"] == "new@example.com"
 
 @pytest.mark.asyncio
 async def test_update_duplicate_email(create_user_helper, authenticated_token, client):
